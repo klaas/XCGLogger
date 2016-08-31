@@ -143,60 +143,56 @@ public class XCGBaseLogDestination: XCGLogDestinationProtocol, CustomDebugString
     ///
     /// - Returns:  Nothing
     ///
-    public func processLogDetails(logDetails: XCGLogDetails) {
-        var extendedDetails: String = ""
-
-        if showDate {
-            var formattedDate: String = logDetails.date.description
-            if let dateFormatter = owner.dateFormatter {
-                formattedDate = dateFormatter.stringFromDate(logDetails.date)
-            }
-
-            // extendedDetails += "\(formattedDate) " // Note: Leaks in Swift versions prior to Swift 3
-            extendedDetails += formattedDate + " "
-        }
-
-        if showLogLevel {
-            extendedDetails += "[\(logDetails.logLevel)] "
-        }
-
-        if showLogIdentifier {
-            // extendedDetails += "[\(owner.identifier)] " // Note: Leaks in Swift versions prior to Swift 3
-            extendedDetails += "[" + owner.identifier + "] "
-        }
-
-        if showThreadName {
-            if NSThread.isMainThread() {
-                extendedDetails += "[main] "
-            }
-            else {
-                if let threadName = NSThread.currentThread().name where !threadName.isEmpty {
-                    extendedDetails += "[" + threadName + "] "
-                }
-                else if let queueName = String(UTF8String: dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL)) where !queueName.isEmpty {
-                    extendedDetails += "[" + queueName + "] "
-                }
-                else {
-                    extendedDetails += "[" + String(format: "%p", NSThread.currentThread()) + "] "
-                }
-            }
-        }
-
-        if showFileName {
-            extendedDetails += "[" + (logDetails.fileName as NSString).lastPathComponent + (showLineNumber ? ":" + String(logDetails.lineNumber) : "") + "] "
-        }
-        else if showLineNumber {
-            extendedDetails += "[" + String(logDetails.lineNumber) + "] "
-        }
-
-        if showFunctionName {
-            // extendedDetails += "\(logDetails.functionName) " // Note: Leaks in Swift versions prior to Swift 3
-            extendedDetails += logDetails.functionName + " "
-        }
-
-        // output(logDetails, text: "\(extendedDetails)> \(logDetails.logMessage)") // Note: Leaks in Swift versions prior to Swift 3
-        output(logDetails, text: extendedDetails + "> " + logDetails.logMessage)
-    }
+	public func processLogDetails(logDetails: XCGLogDetails) {
+		var comps:[String] = []
+		
+		if showDate {
+			var formattedDate: String = logDetails.date.description
+			if let dateFormatter = owner.dateFormatter {
+				formattedDate = dateFormatter.stringFromDate(logDetails.date)
+			}
+			
+			// extendedDetails += "\(formattedDate) " // Note: Leaks in Swift versions prior to Swift 3
+			comps.append(formattedDate)
+		}
+		
+		if showLogLevel {
+			comps.append("[\(logDetails.logLevel)]")
+		}
+		
+		if showLogIdentifier {
+			// extendedDetails += "[\(owner.identifier)] " // Note: Leaks in Swift versions prior to Swift 3
+			comps.append("[" + owner.identifier + "]")
+		}
+		
+		if showThreadName {
+			if NSThread.isMainThread() {
+				comps.append("[main]")
+			} else {
+				if let threadName = NSThread.currentThread().name where !threadName.isEmpty {
+					comps.append("[" + threadName + "]")
+				} else if let queueName = String(UTF8String: dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL)) where !queueName.isEmpty {
+					comps.append("[" + queueName + "]")
+				} else {
+					comps.append("[" + String(format: "%p", NSThread.currentThread()) + "]")
+				}
+			}
+		}
+		
+		if showFileName {
+			comps.append("[" + (logDetails.fileName as NSString).lastPathComponent + (showLineNumber ? ":" + String(logDetails.lineNumber) : "") + "]")
+		} else if showLineNumber {
+			comps.append("[" + String(logDetails.lineNumber) + "]")
+		}
+		
+		if showFunctionName {
+			// extendedDetails += "\(logDetails.functionName) " // Note: Leaks in Swift versions prior to Swift 3
+			comps.append(logDetails.functionName)
+		}
+		
+		// output(logDetails, text: "\(extendedDetails)> \(logDetails.logMessage)") // Note: Leaks in Swift versions prior to Swift 3
+		output(logDetails, text: comps.joinWithSeparator(" ") + "> " + logDetails.logMessage)
+	}
 
     /// Process the log details (internal use, same as processLogDetails but omits function/file/line info).
     ///
