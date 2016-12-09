@@ -1,3 +1,11 @@
+// Changes:
+// ✅ Added LogColor enum
+// ✅ Added LogColor and Prefix to XCGLogDetails
+// ✅ Created AttributedStringLogger (in NerdfyFace repo)
+// ✅ Better composition of string in: BaseDestination.processLogDetails() + added logDetails.prefix
+// ✅ Added prefix and color to output func of File and Console logger
+// ✅ Removed prefix XCG from output
+
 //
 //  XCGLogger.swift
 //  XCGLogger: https://github.com/DaveWoodCom/XCGLogger
@@ -8,10 +16,69 @@
 //
 
 #if os(OSX)
-    import AppKit
+	import AppKit
+	public typealias Color = NSColor
 #elseif os(iOS) || os(tvOS) || os(watchOS)
-    import UIKit
+	import UIKit
+	public typealias Color = UIColor
 #endif
+
+public enum LogColor {
+	case black
+	case white
+	
+	case red
+	case lightRed
+	
+	case green
+	case lightGreen
+	
+	case blue
+	case lightBlue
+	
+	case brown
+	case yellow
+	
+	case purple
+	case lightPurple
+	
+	case cyan
+	case lightCyan
+	
+	case darkGray
+	case lightGray
+	
+	public var color:Color {
+		return LogColor.logColor2Color[self]!
+	}
+	
+	static let logColor2Color:[LogColor:Color] = [
+		.black : Color.black,
+		.white : Color.white,
+		
+		.red : Color.red,
+		.lightRed : Color(red:1, green:0.8, blue: 0.8, alpha: 1),
+		
+		.green : Color.green,
+		.lightGreen : Color(red:0.8, green:1, blue: 0.8, alpha: 1),
+		
+		.blue : Color.blue,
+		.lightBlue : Color(red:0.8, green:0.8, blue: 1, alpha: 1),
+		
+		.brown : Color.brown,
+		.yellow : Color.yellow,
+		
+		.purple : Color.purple,
+		.lightPurple : Color(red:1, green:0.8, blue: 1, alpha: 1),
+		
+		.cyan : Color.cyan,
+		.lightCyan : Color(red:0.8, green:1, blue: 1, alpha: 1),
+		
+		.darkGray : Color.darkGray,
+		.lightGray : Color.lightGray,
+		]
+}
+
 
 // MARK: - XCGLogger
 /// The main logging class
@@ -250,8 +317,8 @@ open class XCGLogger: CustomDebugStringConvertible {
     ///
     /// - Returns:  Nothing
     ///
-    open class func logln(_ closure: @autoclosure @escaping () -> Any?, level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:]) {
-        self.default.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, closure: closure)
+    open class func logln(_ closure: @autoclosure @escaping () -> Any?, level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], prefix:String? = nil, color:LogColor? = nil) {
+		self.default.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, prefix:prefix, color:color, closure: closure)
     }
 
     /// Log a message if the logger's log level is equal to or lower than the specified level.
@@ -266,8 +333,8 @@ open class XCGLogger: CustomDebugStringConvertible {
     ///
     /// - Returns:  Nothing
     ///
-    open class func logln(_ level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], closure: () -> Any?) {
-        self.default.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, closure: closure)
+    open class func logln(_ level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], prefix:String? = nil, color:LogColor? = nil, closure: () -> Any?) {
+        self.default.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, prefix:prefix, color:color, closure: closure)
     }
 
     /// Log a message if the logger's log level is equal to or lower than the specified level.
@@ -282,8 +349,8 @@ open class XCGLogger: CustomDebugStringConvertible {
     ///
     /// - Returns:  Nothing
     ///
-    open class func logln(_ level: Level = .debug, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], closure: () -> Any?) {
-        self.default.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, closure: closure)
+    open class func logln(_ level: Level = .debug, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], prefix:String? = nil, color:LogColor? = nil, closure: () -> Any?) {
+        self.default.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, prefix:prefix, color:color, closure: closure)
     }
 
     /// Log a message if the logger's log level is equal to or lower than the specified level.
@@ -298,8 +365,8 @@ open class XCGLogger: CustomDebugStringConvertible {
     ///
     /// - Returns:  Nothing
     ///
-    open func logln(_ closure: @autoclosure @escaping () -> Any?, level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:]) {
-        self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, closure: closure)
+    open func logln(_ closure: @autoclosure @escaping () -> Any?, level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], prefix:String? = nil, color:LogColor? = nil) {
+        self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, prefix:prefix, color:color, closure: closure)
     }
 
     /// Log a message if the logger's log level is equal to or lower than the specified level.
@@ -314,8 +381,8 @@ open class XCGLogger: CustomDebugStringConvertible {
     ///
     /// - Returns:  Nothing
     ///
-    open func logln(_ level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], closure: () -> Any?) {
-        logln(level, functionName: String(describing: functionName), fileName: String(describing: fileName), lineNumber: lineNumber, userInfo: userInfo, closure: closure)
+    open func logln(_ level: Level = .debug, functionName: StaticString = #function, fileName: StaticString = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], prefix:String? = nil, color:LogColor? = nil, closure: () -> Any?) {
+        logln(level, functionName: String(describing: functionName), fileName: String(describing: fileName), lineNumber: lineNumber, userInfo: userInfo, prefix:prefix, color:color, closure: closure)
     }
 
     /// Log a message if the logger's log level is equal to or lower than the specified level.
@@ -330,12 +397,12 @@ open class XCGLogger: CustomDebugStringConvertible {
     ///
     /// - Returns:  Nothing
     ///
-    open func logln(_ level: Level = .debug, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], closure: () -> Any?) {
+    open func logln(_ level: Level = .debug, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line, userInfo: [String: Any] = [:], prefix:String? = nil, color:LogColor? = nil, closure: () -> Any?) {
         let enabledDestinations = destinations.filter({$0.isEnabledFor(level: level)})
         guard enabledDestinations.count > 0 else { return }
         guard let closureResult = closure() else { return }
 
-        let logDetails: LogDetails = LogDetails(level: level, date: Date(), message: String(describing: closureResult), functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo)
+		let logDetails: LogDetails = LogDetails(level: level, date: Date(), message: String(describing: closureResult), functionName: functionName, fileName: fileName, lineNumber: lineNumber, userInfo: userInfo, prefix:prefix, color:color)
         for destination in enabledDestinations {
             destination.process(logDetails: logDetails)
         }

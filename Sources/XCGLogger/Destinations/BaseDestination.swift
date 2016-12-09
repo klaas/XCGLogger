@@ -77,49 +77,49 @@ open class BaseDestination: DestinationProtocol, CustomDebugStringConvertible {
     open func process(logDetails: LogDetails) {
         guard let owner = owner else { return }
 
-        var extendedDetails: String = ""
+		var comps:[String] = []
 
         if showDate {
-            extendedDetails += "\((owner.dateFormatter != nil) ? owner.dateFormatter!.string(from: logDetails.date) : logDetails.date.description) "
+            comps.append( "\((owner.dateFormatter != nil) ? owner.dateFormatter!.string(from: logDetails.date) : logDetails.date.description)")
         }
 
         if showLevel {
-            extendedDetails += "[\(levelDescriptions[logDetails.level] ?? owner.levelDescriptions[logDetails.level] ?? logDetails.level.description)] "
+            comps.append( "[\(levelDescriptions[logDetails.level] ?? owner.levelDescriptions[logDetails.level] ?? logDetails.level.description)]")
         }
 
         if showLogIdentifier {
-            extendedDetails += "[\(owner.identifier)] "
+            comps.append( "[\(owner.identifier)]")
         }
 
         if showThreadName {
             if Thread.isMainThread {
-                extendedDetails += "[main] "
+                comps.append( "[main]")
             }
             else {
                 if let threadName = Thread.current.name, !threadName.isEmpty {
-                    extendedDetails += "[\(threadName)] "
+                    comps.append( "[\(threadName)]")
                 }
                 else if let queueName = DispatchQueue.currentQueueLabel, !queueName.isEmpty {
-                    extendedDetails += "[\(queueName)] "
+                    comps.append( "[\(queueName)]")
                 }
                 else {
-                    extendedDetails += String(format: "[%p] ", Thread.current)
+                    comps.append( String(format: "[%p]", Thread.current))
                 }
             }
         }
 
         if showFileName {
-            extendedDetails += "[\((logDetails.fileName as NSString).lastPathComponent)\((showLineNumber ? ":" + String(logDetails.lineNumber) : ""))] "
+            comps.append( "[\((logDetails.fileName as NSString).lastPathComponent)\((showLineNumber ? ":" + String(logDetails.lineNumber) : ""))]")
         }
         else if showLineNumber {
-            extendedDetails += "[\(logDetails.lineNumber)] "
+            comps.append( "[\(logDetails.lineNumber)]")
         }
 
         if showFunctionName {
-            extendedDetails += "\(logDetails.functionName) "
+            comps.append( "\(logDetails.functionName)")
         }
 
-        output(logDetails: logDetails, message: "\(extendedDetails)> \(logDetails.message)")
+		output(logDetails: logDetails, message: comps.joined(separator:" ") + " " + (logDetails.prefix ?? "") + logDetails.message)
     }
 
     /// Process the log details (internal use, same as process(logDetails:) but omits function/file/line info).
