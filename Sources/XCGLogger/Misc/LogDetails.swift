@@ -43,5 +43,7 @@ public struct LogDetails {
         self.fileName = fileName
         self.lineNumber = lineNumber
         self.userInfo = userInfo
+		self.prefix = prefix
+		self.color = color
     }
 }
